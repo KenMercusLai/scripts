@@ -2,7 +2,6 @@ import csv
 import re
 import sys
 import itertools
-from functools import partial
 
 # Define the input and output file paths
 input_file = sys.argv[1]  # Replace with your input file path
@@ -29,7 +28,6 @@ def split_objects(lines: list[str]) -> list[list[str]]:
             if current_object:
                 objects.append(current_object)
                 current_object = []
-
             current_object.append(line.replace("\n", ""))
         elif current_object and attribute_match:
             current_object.append(line.replace("\n", ""))
@@ -53,7 +51,7 @@ def get_all_attribute_keys(parsed_object: dict) -> tuple:
 
 
 def write_csv(filename: str, keys: list["str"], data: dict):
-    print(filename, keys)
+    # print(filename, keys)
     with open(output_file, "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(keys)
@@ -69,7 +67,6 @@ def write_csv(filename: str, keys: list["str"], data: dict):
                         attribute_data.append(attr[1])
                     else:
                         attribute_data.append("")
-
                 writer.writerow([name, type, *attribute_data])
 
 
