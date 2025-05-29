@@ -2,12 +2,10 @@ import csv
 import re
 import sys
 import itertools
-from functools import partial
 
 # Define the input and output file paths
 input_file = sys.argv[1]  # Replace with your input file path
 output_file = input_file + ".objects.csv"  # Replace with your desired output file path
-
 
 # Regular expression to match object definitions and their attributes
 object_pattern = re.compile(r"^object (\S+)\s+(\S+)\s*$")
@@ -27,17 +25,12 @@ def split_objects(lines: list[str]) -> list[list[str]]:
                 current_object = []
 
         if object_match:
-            # print(line)
-            # input()
             if current_object:
                 objects.append(current_object)
                 current_object = []
-
             current_object.append(line.replace("\n", ""))
-            # print(current_object, objects)
         elif current_object and attribute_match:
             current_object.append(line.replace("\n", ""))
-    # print(len(objects))
     return objects
 
 
@@ -45,15 +38,16 @@ def parse_object(object: list[str]) -> dict:
     object_def, attribute_def = object[0], object[1:]
     # print(object_def, attribute_def)
     object_type, object_name = object_pattern.match(object_def).groups()
-    attributes = {}
+    attributes = []
     # print(attribute_def)
     for i in attribute_def:
-        attributes.update(dict([attribute_pattern.match(i).groups()]))
+        attributes.append(attribute_pattern.match(i).groups())
     return {"name": object_name, "type": object_type, "attributes": attributes}
 
 
 def get_all_attribute_keys(parsed_object: dict) -> tuple:
-    return parsed_object["attributes"].keys()
+    keys = map(lambda x: x[0], parsed_object["attributes"])
+    return keys
 
 
 def write_csv(filename: str, keys: list["str"], data: dict):
@@ -64,15 +58,22 @@ def write_csv(filename: str, keys: list["str"], data: dict):
         for i in data:
             name = i["name"]
             type = i["type"]
-            attribute_data = []
-            for j in keys[2:]:
-                attribute_data.append(i["attributes"].get(j, ""))
-            writer.writerow([name, type, *attribute_data])
+
+            for attr in i["attributes"]:
+                attribute_data = []
+                # print(attr, attribute_data)
+                for j in keys[2:]:
+                    if j == attr[0]:
+                        attribute_data.append(attr[1])
+                    else:
+                        attribute_data.append("")
+                writer.writerow([name, type, *attribute_data])
 
 
 if __name__ == "__main__":
     with open(input_file, "r") as file:
         splitted_objects = split_objects(file.readlines())
+    print(len(splitted_objects))
     parsed_objects = list(map(parse_object, splitted_objects))
     keys_list = map(get_all_attribute_keys, parsed_objects)
     unique_attribute_keys = set(itertools.chain.from_iterable(keys_list))
